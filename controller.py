@@ -78,6 +78,15 @@ class Ui_MainWindow(object):
         self.label_10 = QtGui.QLabel(self.centralwidget)
         self.label_10.setGeometry(QtCore.QRect(100, 30, 54, 12))
         self.label_10.setObjectName(_fromUtf8("label_10"))
+        self.label_pwm = QtGui.QLabel(self.centralwidget)
+        self.label_pwm.setGeometry(QtCore.QRect(418, 180, 54, 12))
+        self.label_pwm.setObjectName(_fromUtf8("label_pwm"))
+        self.label_11 = QtGui.QLabel(self.centralwidget)
+        self.label_11.setGeometry(QtCore.QRect(610, 180, 54, 12))#debug
+        self.label_11.setObjectName(_fromUtf8("label_pwm"))
+        self.text_pwm = QtGui.QLineEdit(self.centralwidget)
+        self.text_pwm.setGeometry(QtCore.QRect(500, 170, 101, 31))
+        self.text_pwm.setObjectName(_fromUtf8("text_pwm"))
         self.comSelect = QtGui.QComboBox(self.centralwidget)
         self.comSelect.setGeometry(QtCore.QRect(160, 20, 69, 22))
         self.comSelect.setObjectName(_fromUtf8("comSelect"))
@@ -107,8 +116,10 @@ class Ui_MainWindow(object):
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
         self.pulseWidth=100
         self.frequency=50
+        self.pwm=50
         self.frequencyInputText.setText(str(self.frequency))
         self.pulseWidthInputText.setText(str(self.pulseWidth))
+        self.text_pwm.setText(str(self.pwm))
         self.timeSetInputText.setText("120")
         self.runningMode=2
         self.modeSelectComboBox.setCurrentIndex(self.runningMode)
@@ -141,6 +152,7 @@ class Ui_MainWindow(object):
         self.stopButton.clicked.connect(self.stopButtonEvent)
         self.frequencyInputText.returnPressed.connect(self.frequencyChange)
         self.pulseWidthInputText.returnPressed.connect(self.pulsewidthChange)
+        self.text_pwm.returnPressed.connect(self.pwmChange)
         self.modeSelectComboBox.currentIndexChanged.connect(self.modeSelectChange)
         self.comSelect.currentIndexChanged.connect(self.deviceSelectChange)
         self.remainTime=60
@@ -160,6 +172,8 @@ class Ui_MainWindow(object):
         self.label_8.setText(_translate("MainWindow", "us", None))
         self.label_9.setText(_translate("MainWindow", "S", None))
         self.label_10.setText(_translate("MainWindow", "端口号", None))
+        self.label_pwm.setText(_translate("MainWindow", "占空比", None))
+        self.label_11.setText(_translate("MainWindow", "%", None))
 
     def startButtonEvent(self):
         if(self.startButton.text()==u"启动"):
@@ -253,23 +267,29 @@ class Ui_MainWindow(object):
         print "[+]Command:",command
         self.device.write(command)
         print "[+] Written completed!"
-
+    def pwmChange(self):
+        self.pwm=self.text_pwm.text()
+        command="<W:{}>".format(self.pwm)
+        print "[+]Command:",command
+        self.device.write(command)
+        print "[+] Written completed!"
     def setParameter(self,state):
         if(state==True):
             self.frequency=self.frequencyInputText.text()
             self.pulseWidth=self.pulseWidthInputText.text()
+            self.pwm=self.text_pwm.text()
             print "[+]Set",self.currentComSelect,"Params:",
             if(self.runningMode==2):#连续波
                 print "ContinousWave"
-                command="<C:0><P:{}><F:{}>".format(self.pulseWidth,self.frequency)
+                command="<C:0><P:{}><F:{}><W:{}>".format(self.pulseWidth,self.frequency,self.pwm)
                 print "[+]Command:",command
             elif(self.runningMode==1):#断续波
                 print "StopandaheadWave"
-                command="<C:2><P:{}><F:{}>".format(self.pulseWidth,self.frequency)
+                command="<C:2><P:{}><F:{}><W:{}>".format(self.pulseWidth,self.frequency,self.pwm)
                 print "[+]Command:",command
             elif(self.runningMode==0):#疏密波
                 print "DensityWave"
-                command="<C:1><P:{}><F:{}>".format(self.pulseWidth,self.frequency)
+                command="<C:1><P:{}><F:{}><W:{}>".format(self.pulseWidth,self.frequency,self.pwm)
                 print "[+]Command:",command
         else:#停止运行
             command="<X>"
